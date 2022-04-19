@@ -1,0 +1,22 @@
+# Directories
+.vs/
+bin/
+bin-intermediate/
+
+# Visual studios projects & solutions
+*.sln
+*.vcxproj
+
+# Files
+*.user
+
+# Vscode
+.vscode/*
+
+# glad binary build folders
+SauropodEngine/vendor/Glad/bin/
+SauropodEngine/vendor/Glad/bin-intermediate/
+
+# imgui ini files
+
+*imgui.ini
