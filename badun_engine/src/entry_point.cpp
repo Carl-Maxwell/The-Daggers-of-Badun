@@ -1,6 +1,7 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 #include "mtypedefs.h"
+#include "mlog.h"
 
 class Example : public olc::PixelGameEngine
 {
@@ -19,6 +20,9 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		Log::log("time1: {0}", fElapsedTime);
+		
+
 		// called once per frame
 		for (int x = 0; x < ScreenWidth(); x++)
 			for (int y = 0; y < ScreenHeight(); y++)
