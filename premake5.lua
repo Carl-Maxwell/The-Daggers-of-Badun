@@ -42,7 +42,8 @@ project "badun_engine"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vendor/spdlog/include"
+		"%{prj.name}/vendor/spdlog/include",
+		"%{prj.name}/vendor/glm-0.9.9.8/glm"
 	}
 	links 
 	{ 
@@ -97,7 +98,8 @@ project "badun_sandbox"
 	includedirs
 	{
 		"badun_engine/vendor/spdlog/include",
-		"badun_engine/src"
+		"badun_engine/src",
+		"badun_engine/vendor/glm-0.9.9.8/glm"
 	}
 
 	links
@@ -149,7 +151,8 @@ project "badun_game"
 	includedirs
 	{
 		"badun_engine/vendor/spdlog/include",
-		"badun_engine/src"
+		"badun_engine/src",
+		"badun_engine/vendor/glm-0.9.9.8/glm"
 	}
 
 	links
