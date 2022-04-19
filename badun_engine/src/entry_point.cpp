@@ -82,9 +82,11 @@ public:
 		float fAspectRatio = (float)ScreenHeight() / (float)ScreenWidth();
 		float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
 
-		// mat_proj = glm::perspectiveLH_ZO(fFov, fAspectRatio, fNear, fFar);
-
 		mat_proj = glm::mat4x4();
+
+		mat_proj = glm::perspectiveLH_ZO(fFov, fAspectRatio, fNear, fFar);
+
+		Log::log_mat4x4(mat_proj);
 
 		mat_proj[0][0] = fAspectRatio * fFovRad;
 		mat_proj[1][1] = fFovRad;
@@ -112,7 +114,7 @@ public:
 			tri_translated = tri;
 			for (i32 i = 0; i < 3; i++) 
 			{
-				tri_translated.vertices[i] = tri.vertices[i] + 3.0f;
+				tri_translated.vertices[i].z = tri.vertices[i].z + 3.0f;
 			}
 
 			MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
