@@ -3,6 +3,8 @@
 #include <spdlog/fmt/ostr.h>
 #include "spdlog/sinks/stdout_color_sinks.h"
 
+#include <glm/glm.hpp>
+
 class Log
 {
 public:
@@ -59,5 +61,15 @@ public:
 	{
 		green(fmt, std::forward<Args>(args)...);
 		// TODO randomly choose a color?
+	}
+
+	static inline void log_mat4x4(glm::mat4x4 mat)
+	{
+		Log::green("");
+		for (i32 x = 0; x < 4; x++) 
+		{
+			Log::green("mat4x4\t{0}\t{1}\t{2}\t{3}", mat[x][0], mat[x][1], mat[x][2], mat[x][3]);
+		}
+		Log::green("");
 	}
 };
