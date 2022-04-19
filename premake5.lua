@@ -22,7 +22,7 @@ IncludeDir = {}
 
 project "badun_engine"
 	location "badun_engine"
-	kind "SharedLib"
+	kind "ConsoleApp"
 	language "C++"
 
 	-- TODO: for some reason I wasn't able to use %{prj.location}
@@ -59,11 +59,11 @@ project "badun_engine"
 		
 		-- }
 		
-		postbuildcommands
-		{
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_sandbox"),
-			("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_game")
-		}
+		-- postbuildcommands
+		-- {
+		-- 	("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_sandbox"),
+		-- 	("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_game")
+		-- }
 
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"
