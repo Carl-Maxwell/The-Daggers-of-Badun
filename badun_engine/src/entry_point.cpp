@@ -30,6 +30,7 @@ public:
 private:
 	Mesh mesh_cube;
 	glm::mat4x4 mat_proj;
+	float fTheta = 0;
 
 	void MultiplyMatrixVector(glm::vec3 &i, glm::vec3 &o, glm::mat4x4 &mat)
 	{
@@ -106,15 +107,44 @@ public:
 		// Log::log("time1: {0}", fElapsedTime);
 
 		Clear(olc::Pixel(0, 0, 0));
-		
+
+		glm::mat4x4 mat_rot_z{}, mat_rot_x{};
+		fTheta += fElapsedTime;
+
+		// Rotation Z
+		mat_rot_z[0][0] =  cosf(fTheta);
+		mat_rot_z[0][1] =  sinf(fTheta);
+		mat_rot_z[1][0] = -sinf(fTheta);
+		mat_rot_z[1][1] =  cosf(fTheta);
+		mat_rot_z[2][2] = 1;
+		mat_rot_z[3][3] = 1;
+
+		// Rotation X
+		mat_rot_x[0][0] = 1;
+		mat_rot_x[1][1] =  cosf(fTheta * 0.5f);
+		mat_rot_x[1][2] =  sinf(fTheta * 0.5f);
+		mat_rot_x[2][1] = -sinf(fTheta * 0.5f);
+		mat_rot_x[2][2] =  cosf(fTheta * 0.5f);
+		mat_rot_x[3][3] = 1;
+
 		for (auto tri : mesh_cube.tris) 
 		{
-			Triangle tri_projected, tri_translated;
+			Triangle tri_projected, tri_translated, tri_rotated_z, tri_rotated_zx;
 
-			tri_translated = tri;
 			for (i32 i = 0; i < 3; i++) 
 			{
-				tri_translated.vertices[i].z = tri.vertices[i].z + 3.0f;
+				MultiplyMatrixVector(tri.vertices[i], tri_rotated_z.vertices[i], mat_rot_z);
+			}
+
+			for (i32 i = 0; i < 3; i++) 
+			{
+				MultiplyMatrixVector(tri_rotated_z.vertices[i], tri_rotated_zx.vertices[i], mat_rot_x);
+			}
+
+			tri_translated = tri_rotated_zx;
+			for (i32 i = 0; i < 3; i++) 
+			{
+				tri_translated.vertices[i].z = tri_rotated_zx.vertices[i].z + 3.0f;
 			}
 
 			MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
