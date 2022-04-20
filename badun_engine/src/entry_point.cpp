@@ -144,12 +144,13 @@ public:
 				{
 					MultiplyMatrixVector(tri_rotated_z.vertices[i], tri_rotated_zx.vertices[i], mat_rot_x);
 				}
+
 				tri_translated = tri_rotated_zx;
 
 				// translate mesh
 				for (i32 i = 0; i < 3; i++) 
 				{
-					tri_translated.vertices[i].z = tri_rotated_zx.vertices[i].z + 3.0f;
+					tri_translated.vertices[i].z += 3.0f;
 				}
 			}
 
@@ -170,7 +171,7 @@ public:
 					glm::vec3 light_direction = {0, 0, -1};
 					light_direction = glm::normalize(light_direction);
 
-					float light_factor = glm::dot(light_direction, normal);
+					light_factor = glm::dot(light_direction, normal);
 				}
 
 				Triangle tri_projected;
