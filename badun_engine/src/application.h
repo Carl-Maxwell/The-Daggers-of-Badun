@@ -2,7 +2,6 @@
 
 #include "olcPixelGameEngine.h"
 
-#include "triangle.h"
 #include "mesh.h"
 
 class Application : public olc::PixelGameEngine
@@ -13,7 +12,7 @@ public:
 		sAppName = "The Daggers of Badun!";
 	}
 
-private:
+public:
 	Mesh mesh_spaceship;
 	glm::mat4x4 mat_proj{};
 	float fTheta = 0;
