@@ -174,7 +174,7 @@ public:
 				// translate mesh
 				for (i32 i = 0; i < 3; i++) 
 				{
-					tri_translated.vertices[i].z += 3.0f;
+					tri_translated.vertices[i].z += 8.0f;
 				}
 			}
 
@@ -219,7 +219,7 @@ public:
 
 				// TODO draw lines and triangles manually
 				FillTriangle(a, b, c, olc::Pixel(255, 255, 255) * light_factor);
-				// DrawTriangle(a, b, c, olc::Pixel(0, 255, 0));
+				DrawTriangle(a, b, c, olc::Pixel(0, 128, 0));
 			}
 
 		}
