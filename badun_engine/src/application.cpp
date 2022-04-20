@@ -20,17 +20,41 @@ void Application::MultiplyMatrixVector(glm::vec3 &i, glm::vec3 &o, glm::mat4x4 &
 	}
 }
 
+glm::mat4x4 Application::matrix_PointAt(glm::vec3 &pos, glm::vec3 &target, glm::vec3 &up)
+{
+	// Calculate new forward direction
+	glm::vec3 new_forward = target - pos;
+	new_forward = glm::normalize(new_forward);
+
+	// Calculate new up direction
+	glm::vec3 a = new_forward * glm::dot(up, new_forward);
+	glm::vec3 new_up = up - a;
+	new_up = glm::normalize(new_up);
+
+	// Calculate new right direction
+	glm::vec3 new_right = glm::cross(new_up, new_forward);
+
+	// construct "dimensioning and translation matrix"
+	glm::mat4x4 matrix;
+	matrix[0][0] = new_right.x;   matrix[0][1] = new_right.y;   matrix[0][2] = new_right.z;   matrix[0][3] = 0.0f;
+	matrix[1][0] = new_up.x;      matrix[1][1] = new_up.y;      matrix[1][2] = new_up.z;      matrix[1][3] = 0.0f;
+	matrix[2][0] = new_forward.x; matrix[2][1] = new_forward.y; matrix[2][2] = new_forward.z; matrix[2][3] = 0.0f;
+	matrix[3][0] = pos.x;         matrix[3][1] = pos.y;         matrix[3][2] = pos.z;         matrix[3][3] = 1.0f;
+	return matrix;
+}
+
 bool Application::OnUserCreate()
 {
 	mesh_spaceship.tris = {};
 
 	// mesh_spaceship.loadFromObjectFile("resources/teapot.obj");
-	mesh_spaceship.loadFromObjectFile("resources/video_ship.obj");
+	// mesh_spaceship.loadFromObjectFile("resources/video_ship.obj");
+	mesh_spaceship.loadFromObjectFile("resources/axis.obj");
 
 	// Project Matrix
 
 	float fNear = 0.1f;
-	float fFar  = 1000.0f;
+	float fFar = 1000.0f;
 	float fFov = 90.0f;
 	float fAspectRatio = (float)ScreenHeight() / (float)ScreenWidth();
 	float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
@@ -58,17 +82,34 @@ bool Application::OnUserUpdate(float fElapsedTime)
 {
 	Clear(olc::Pixel(0, 0, 0));
 
-	if (GetKey(olc::ESCAPE).bHeld) {
+	if (GetKey(olc::ESCAPE).bHeld)
 		olc_Terminate();
-	}
-
-	if (GetKey(olc::K1).bPressed) {
+	if (GetKey(olc::K1).bPressed)
 		draw_wireframes = !draw_wireframes;
-	}
+	if (GetKey(olc::E).bHeld)
+		v_camera_pos.y += 8.0f * fElapsedTime;
+	if (GetKey(olc::Q).bHeld)
+		v_camera_pos.y -= 8.0f * fElapsedTime;
+	if (GetKey(olc::D).bHeld)
+		v_camera_pos.x += 8.0f * fElapsedTime;
+	if (GetKey(olc::A).bHeld)
+		v_camera_pos.x -= 8.0f * fElapsedTime;
+	if (GetKey(olc::W).bHeld)
+		v_camera_pos +=  v_look_direction * 8.0f * fElapsedTime;
+	if (GetKey(olc::S).bHeld)
+		v_camera_pos -=  v_look_direction * 8.0f * fElapsedTime;
 
+	if (GetKey(olc::RIGHT).bHeld)
+		f_yaw += 2.0f * fElapsedTime;
+	if (GetKey(olc::LEFT).bHeld)
+		f_yaw -= 2.0f * fElapsedTime;
+
+	Log::green("camera position: {0}, {1}, {2}", v_camera_pos.x, v_camera_pos.y, v_camera_pos.z);
+
+	f_yaw;
 
 	glm::mat4x4 mat_rot_z{}, mat_rot_x{};
-	fTheta += fElapsedTime;
+	// fTheta += fElapsedTime; 
 
 	// Rotation Z
 	mat_rot_z[0][0] =  cosf(fTheta);
@@ -85,6 +126,17 @@ bool Application::OnUserUpdate(float fElapsedTime)
 	mat_rot_x[2][1] = -sinf(fTheta * 0.5f);
 	mat_rot_x[2][2] =  cosf(fTheta * 0.5f);
 	mat_rot_x[3][3] = 1;
+
+	glm::vec3 v_up = { 0, 1, 0 };
+	glm::vec3 v_target = { 0, 0, 1 };
+	glm::mat4x4 m_camera_rot = matrix_MakeRotationY(f_yaw);
+	// v_look_direction = m_camera_rot * v_target; // TODO convert vec3s to vec4s then this'll replace matrix_multiplymatrixvector
+	MultiplyMatrixVector(v_target, v_look_direction, m_camera_rot);
+	v_target = v_camera_pos + v_look_direction;
+
+	glm::mat4x4 m_camera = matrix_PointAt(v_camera_pos, v_target, v_up);
+
+	glm::mat4x4 m_view = matrix_QuickInverse(m_camera);
 
 	std::vector<Triangle> v_triangles_to_raster;
 
@@ -133,6 +185,17 @@ bool Application::OnUserUpdate(float fElapsedTime)
 				light_factor = glm::dot(light_direction, normal);
 			}
 
+			// Convert world space -> view space
+			{
+				Triangle t_viewed{};
+				for (i32 i = 0; i < 3; i++)
+				{
+					MultiplyMatrixVector(tri_translated.vertices[i], t_viewed.vertices[i], m_view);
+				}
+
+				tri_translated = t_viewed;
+			}
+			
 			Triangle tri_projected;
 
 			// project triangles from 3d -> 2d
@@ -173,3 +236,33 @@ bool Application::OnUserUpdate(float fElapsedTime)
 	return true;
 }
 
+//
+// 
+//
+
+glm::mat4x4 Application::matrix_MakeRotationY(f32 fAngleRad)
+{
+	glm::mat4x4 matrix{};
+	matrix[0][0] = cosf(fAngleRad);
+	matrix[0][2] = sinf(fAngleRad);
+	matrix[2][0] = -sinf(fAngleRad);
+	matrix[1][1] = 1.0f;
+	matrix[2][2] = cosf(fAngleRad);
+	matrix[3][3] = 1.0f;
+	return matrix;
+}
+
+glm::mat4x4 Application::matrix_QuickInverse(glm::mat4x4 &m)
+{
+	glm::mat4x4 matrix{};
+	matrix[0][0] = m[0][0]; matrix[0][1] = m[1][0]; matrix[0][2] = m[2][0]; matrix[0][3] = 0.0f;
+	matrix[1][0] = m[0][1]; matrix[1][1] = m[1][1]; matrix[1][2] = m[2][1]; matrix[1][3] = 0.0f;
+	matrix[2][0] = m[0][2]; matrix[2][1] = m[1][2]; matrix[2][2] = m[2][2]; matrix[2][3] = 0.0f;
+
+	matrix[3][0] = -(m[3][0] * matrix[0][0] + m[3][1] * matrix[1][0] + m[3][2] * matrix[2][0]);
+	matrix[3][1] = -(m[3][0] * matrix[0][1] + m[3][1] * matrix[1][1] + m[3][2] * matrix[2][1]);
+	matrix[3][2] = -(m[3][0] * matrix[0][2] + m[3][1] * matrix[1][2] + m[3][2] * matrix[2][2]);
+	matrix[3][3] = 1.0f;
+
+	return matrix;
+}
