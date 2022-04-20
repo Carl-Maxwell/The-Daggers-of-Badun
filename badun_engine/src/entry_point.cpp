@@ -69,7 +69,7 @@ public:
 	}
 
 private:
-	Mesh mesh_cube;
+	Mesh mesh_spaceship;
 	glm::mat4x4 mat_proj{};
 	float fTheta = 0;
 	
@@ -91,32 +91,7 @@ private:
 public:
 	bool OnUserCreate() override
 	{
-		mesh_cube.tris = {
-
-			// south
-			{glm::vec3{0, 0, 0},    glm::vec3{0, 1, 0},    glm::vec3{1, 1, 0}},
-			{glm::vec3{0, 0, 0},    glm::vec3{1, 1, 0},    glm::vec3{1, 0, 0}},
-
-			// east
-			{glm::vec3{1, 0, 0},    glm::vec3{1, 1, 0},    glm::vec3{1, 1, 1}},
-			{glm::vec3{1, 0, 0},    glm::vec3{1, 1, 1},    glm::vec3{1, 0, 1}},
-
-			// north
-			{glm::vec3{1, 0, 1},    glm::vec3{1, 1, 1},    glm::vec3{0, 1, 1}},
-			{glm::vec3{1, 0, 1},    glm::vec3{0, 1, 1},    glm::vec3{0, 0, 1}},
-
-			// west
-			{glm::vec3{0, 0, 1},    glm::vec3{0, 1, 1},    glm::vec3{0, 1, 0}},
-			{glm::vec3{0, 0, 1},    glm::vec3{0, 1, 0},    glm::vec3{0, 0, 0}},
-
-			// top
-			{glm::vec3{0, 1, 0},    glm::vec3{0, 1, 1},    glm::vec3{1, 1, 1}},
-			{glm::vec3{0, 1, 0},    glm::vec3{1, 1, 1},    glm::vec3{1, 1, 0}},
-
-			// bottom
-			{glm::vec3{1, 0, 1},    glm::vec3{0, 0, 1},    glm::vec3{0, 0, 0}},
-			{glm::vec3{1, 0, 1},    glm::vec3{0, 0, 0},    glm::vec3{1, 0, 0}},
-		};
+		mesh_spaceship.tris = {};
 
 		// Project Matrix
 
@@ -170,7 +145,7 @@ public:
 		mat_rot_x[2][2] =  cosf(fTheta * 0.5f);
 		mat_rot_x[3][3] = 1;
 
-		for (auto tri : mesh_cube.tris) 
+		for (auto tri : mesh_spaceship.tris) 
 		{
 			Triangle tri_translated;
 			{
@@ -247,6 +222,37 @@ public:
 		return true;
 	}
 };
+
+Mesh createCube() 
+{
+	Mesh cube;
+	cube.tris = {
+		// south
+		{glm::vec3{0, 0, 0},    glm::vec3{0, 1, 0},    glm::vec3{1, 1, 0}},
+		{glm::vec3{0, 0, 0},    glm::vec3{1, 1, 0},    glm::vec3{1, 0, 0}},
+
+		// east
+		{glm::vec3{1, 0, 0},    glm::vec3{1, 1, 0},    glm::vec3{1, 1, 1}},
+		{glm::vec3{1, 0, 0},    glm::vec3{1, 1, 1},    glm::vec3{1, 0, 1}},
+
+		// north
+		{glm::vec3{1, 0, 1},    glm::vec3{1, 1, 1},    glm::vec3{0, 1, 1}},
+		{glm::vec3{1, 0, 1},    glm::vec3{0, 1, 1},    glm::vec3{0, 0, 1}},
+
+		// west
+		{glm::vec3{0, 0, 1},    glm::vec3{0, 1, 1},    glm::vec3{0, 1, 0}},
+		{glm::vec3{0, 0, 1},    glm::vec3{0, 1, 0},    glm::vec3{0, 0, 0}},
+
+		// top
+		{glm::vec3{0, 1, 0},    glm::vec3{0, 1, 1},    glm::vec3{1, 1, 1}},
+		{glm::vec3{0, 1, 0},    glm::vec3{1, 1, 1},    glm::vec3{1, 1, 0}},
+
+		// bottom
+		{glm::vec3{1, 0, 1},    glm::vec3{0, 0, 1},    glm::vec3{0, 0, 0}},
+		{glm::vec3{1, 0, 1},    glm::vec3{0, 0, 0},    glm::vec3{1, 0, 0}},
+	};
+	return cube;
+}
 
 i32 main() {
 	Application demo;
