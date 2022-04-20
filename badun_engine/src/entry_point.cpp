@@ -14,10 +14,10 @@
 #include "application.h"
 
 i32 main() {
-	Application demo;
-	auto success = demo.Construct(256, 240, 4, 4);
+	Application app;
+	auto success = app.Construct(256, 240, 4, 4);
 	if (success)
-		demo.Start();
+		app.Start();
 	else
 		Log::red("pixel game engine did not initialize! rcode: {0}", success);
 
