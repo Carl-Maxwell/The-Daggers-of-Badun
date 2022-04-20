@@ -160,6 +160,12 @@ public:
 			}
 
 			if (glm::dot(glm::normalize(tri_translated.vertices[0] - v_camera_pos), normal) < 0) {
+				// Illumination
+				glm::vec3 light_direction = {0, 0, -1};
+				light_direction = glm::normalize(light_direction);
+
+				float light_factor = glm::dot(light_direction, normal);
+
 				// project triangles from 3d -> 2d
 				MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
 				MultiplyMatrixVector(tri_translated.vertices[1], tri_projected.vertices[1], mat_proj);
@@ -178,8 +184,8 @@ public:
 				olc::vi2d c(tri_projected.vertices[2].x, tri_projected.vertices[2].y);
 
 				// TODO draw lines and triangles manually
-				FillTriangle(a, b, c, olc::Pixel(0, 200, 0));
-				DrawTriangle(a, b, c, olc::Pixel(0, 255, 0));
+				FillTriangle(a, b, c, olc::Pixel(255, 255, 255) * light_factor);
+				// DrawTriangle(a, b, c, olc::Pixel(0, 255, 0));
 			}
 
 		}
