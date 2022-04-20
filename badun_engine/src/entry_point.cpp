@@ -29,8 +29,10 @@ public:
 
 private:
 	Mesh mesh_cube;
-	glm::mat4x4 mat_proj;
+	glm::mat4x4 mat_proj{};
 	float fTheta = 0;
+	
+	glm::vec3 v_camera_pos{};
 
 	void MultiplyMatrixVector(glm::vec3 &i, glm::vec3 &o, glm::mat4x4 &mat)
 	{
@@ -59,7 +61,7 @@ public:
 			{glm::vec3{1, 0, 0},    glm::vec3{1, 1, 1},    glm::vec3{1, 0, 1}},
 
 			// north
-			{glm::vec3{1, 0, 1},    glm::vec3{1, 1, 1},    glm::vec3{1, 1, 1}},
+			{glm::vec3{1, 0, 1},    glm::vec3{1, 1, 1},    glm::vec3{0, 1, 1}},
 			{glm::vec3{1, 0, 1},    glm::vec3{0, 1, 1},    glm::vec3{0, 0, 1}},
 
 			// west
@@ -147,23 +149,38 @@ public:
 				tri_translated.vertices[i].z = tri_rotated_zx.vertices[i].z + 3.0f;
 			}
 
-			MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
-			MultiplyMatrixVector(tri_translated.vertices[1], tri_projected.vertices[1], mat_proj);
-			MultiplyMatrixVector(tri_translated.vertices[2], tri_projected.vertices[2], mat_proj);
-
-			for (i32 i = 0; i < 3; i++) 
+			// calculate surface normal
+			glm::vec3 normal;
 			{
-				tri_projected.vertices[i] += 1.0f;
-				tri_projected.vertices[i] *= 0.5f * glm::vec3((float)ScreenWidth(), (float)ScreenHeight(), 2.0f);
+				glm::vec3 line1, line2;
+				line1 = tri_translated.vertices[1] - tri_translated.vertices[0];
+				line2 = tri_translated.vertices[2] - tri_translated.vertices[0];
+				
+				normal = glm::normalize(glm::cross(line1, line2));
 			}
 
-			olc::vi2d a(tri_projected.vertices[0].x, tri_projected.vertices[0].y);
-			olc::vi2d b(tri_projected.vertices[1].x, tri_projected.vertices[1].y);
-			olc::vi2d c(tri_projected.vertices[2].x, tri_projected.vertices[2].y);
+			if (glm::dot(glm::normalize(tri_translated.vertices[0] - v_camera_pos), normal) < 0) {
+				// project triangles from 3d -> 2d
+				MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
+				MultiplyMatrixVector(tri_translated.vertices[1], tri_projected.vertices[1], mat_proj);
+				MultiplyMatrixVector(tri_translated.vertices[2], tri_projected.vertices[2], mat_proj);
 
-			// TODO draw lines and triangles manually
+				// scale into view
+				for (i32 i = 0; i < 3; i++) 
+				{
+					tri_projected.vertices[i] += 1.0f;
+					tri_projected.vertices[i] *= 0.5f * glm::vec3((float)ScreenWidth(), (float)ScreenHeight(), 2.0f);
+				}
 
-			DrawTriangle(a, b, c, olc::Pixel(0, 255, 0));
+				// convert to olc vectors for API
+				olc::vi2d a(tri_projected.vertices[0].x, tri_projected.vertices[0].y);
+				olc::vi2d b(tri_projected.vertices[1].x, tri_projected.vertices[1].y);
+				olc::vi2d c(tri_projected.vertices[2].x, tri_projected.vertices[2].y);
+
+				// TODO draw lines and triangles manually
+				FillTriangle(a, b, c, olc::Pixel(0, 200, 0));
+				DrawTriangle(a, b, c, olc::Pixel(0, 255, 0));
+			}
 
 		}
 
