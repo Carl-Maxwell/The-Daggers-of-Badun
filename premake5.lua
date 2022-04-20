@@ -24,6 +24,7 @@ project "badun_engine"
 	location "badun_engine"
 	kind "ConsoleApp"
 	language "C++"
+	debugdir "%{cfg.targetdir}"
 
 	-- TODO: for some reason I wasn't able to use %{prj.location}
 
@@ -60,11 +61,12 @@ project "badun_engine"
 		
 		-- }
 		
-		-- postbuildcommands
-		-- {
-		-- 	("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_sandbox"),
+		postbuildcommands
+		{
+			-- ("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_sandbox"),
 		-- 	("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/badun_game")
-		-- }
+			("{COPYDIR} ../resources/ ../bin/" .. outputdir .. "/badun_engine/resources/")
+		}
 
 	filter "configurations:Debug"
 		defines "HZ_DEBUG"

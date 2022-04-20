@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <strstream>
+#include <filesystem>
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
@@ -24,8 +25,11 @@ struct Mesh
 	bool loadFromObjectFile(std::string s_filename)
 	{
 		std::ifstream f(s_filename);
-		if (!f.is_open())
+		if (!f.is_open()) {
+			Log::red("loadFromObjectFile: Unable to load {0}", s_filename);
+			Log::white("loadFromObjectFile: Current working directory: {0}", std::filesystem::current_path());
 			return false;
+		}
 
 		// Local cache of vertices
 		std::vector<glm::vec3> file_vertices;
@@ -57,6 +61,8 @@ struct Mesh
 				} );
 			}
 		}
+
+		return true;
 	}
 };
 
@@ -92,6 +98,8 @@ public:
 	bool OnUserCreate() override
 	{
 		mesh_spaceship.tris = {};
+
+		mesh_spaceship.loadFromObjectFile("resources/video_ship.obj");
 
 		// Project Matrix
 
