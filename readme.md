@@ -13,5 +13,6 @@ Hope to also implement collision detection, maybe based off of:
 
 Uses the pixel game engine (https://github.com/OneLoneCoder/olcPixelGameEngine) and spdlog
 
+Because this uses code from [javid9x's repo](https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_olcEngine3D_Part3.cpp) for the tutorial series, the code here is GPL'd.
 
 (Project name was randomly generated on https://donjon.bin.sh/fantasy/name/#type=set)
