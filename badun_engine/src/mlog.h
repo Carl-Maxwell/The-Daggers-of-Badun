@@ -1,3 +1,5 @@
+#pragma once
+
 #include <spdlog/spdlog.h>
 #include <spdlog/common.h>
 #include <spdlog/fmt/ostr.h>

@@ -1,5 +1,13 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
+#include "olcPixelGameEngine.h"
+
+#include "mtypedefs.h"
+#include "mlog.h"
+
+
 struct Triangle
 {
 	glm::vec3 vertices[3];
