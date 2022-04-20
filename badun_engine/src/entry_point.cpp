@@ -16,6 +16,18 @@
 struct Triangle
 {
 	glm::vec3 vertices[3];
+	float light_factor = 1.0f;
+
+	void draw(olc::PixelGameEngine* app) {
+				// convert to olc vectors for API
+				olc::vi2d a(vertices[0].x, vertices[0].y);
+				olc::vi2d b(vertices[1].x, vertices[1].y);
+				olc::vi2d c(vertices[2].x, vertices[2].y);
+
+				// TODO draw lines and triangles manually
+				app->FillTriangle(a, b, c, olc::Pixel(255, 255, 255) * light_factor);
+				app->DrawTriangle(a, b, c, olc::Pixel(0, 128, 0));
+	}
 };
 
 struct Mesh
@@ -153,6 +165,8 @@ public:
 		mat_rot_x[2][2] =  cosf(fTheta * 0.5f);
 		mat_rot_x[3][3] = 1;
 
+		std::vector<Triangle> v_triangles_to_raster;
+
 		for (auto tri : mesh_spaceship.tris) 
 		{
 			Triangle tri_translated;
@@ -212,16 +226,27 @@ public:
 					tri_projected.vertices[i] *= 0.5f * glm::vec3((float)ScreenWidth(), (float)ScreenHeight(), 2.0f);
 				}
 
-				// convert to olc vectors for API
-				olc::vi2d a(tri_projected.vertices[0].x, tri_projected.vertices[0].y);
-				olc::vi2d b(tri_projected.vertices[1].x, tri_projected.vertices[1].y);
-				olc::vi2d c(tri_projected.vertices[2].x, tri_projected.vertices[2].y);
+				tri_projected.light_factor = light_factor;
 
-				// TODO draw lines and triangles manually
-				FillTriangle(a, b, c, olc::Pixel(255, 255, 255) * light_factor);
-				DrawTriangle(a, b, c, olc::Pixel(0, 128, 0));
+				v_triangles_to_raster.push_back(tri_projected);
 			}
+		}
 
+		// Sort triangles from back to front
+		std::sort(
+			v_triangles_to_raster.begin(), 
+			v_triangles_to_raster.end(), 
+			[](Triangle &a, Triangle &b)
+			{
+				float a_z_sum = a.vertices[0].z + a.vertices[1].z + a.vertices[2].z;
+				float b_z_sum = b.vertices[0].z + b.vertices[1].z + b.vertices[2].z;
+
+				return a_z_sum > b_z_sum;
+			} );
+
+		for (auto tri : v_triangles_to_raster)
+		{
+			tri.draw(this);
 		}
 
 		// for (int x = 0; x < ScreenWidth(); x++)
