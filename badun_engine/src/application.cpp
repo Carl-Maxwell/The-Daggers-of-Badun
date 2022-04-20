@@ -24,6 +24,7 @@ bool Application::OnUserCreate()
 {
 	mesh_spaceship.tris = {};
 
+	// mesh_spaceship.loadFromObjectFile("resources/teapot.obj");
 	mesh_spaceship.loadFromObjectFile("resources/video_ship.obj");
 
 	// Project Matrix
