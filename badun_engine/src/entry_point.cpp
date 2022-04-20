@@ -131,22 +131,26 @@ public:
 
 		for (auto tri : mesh_cube.tris) 
 		{
-			Triangle tri_projected, tri_translated, tri_rotated_z, tri_rotated_zx;
-
-			for (i32 i = 0; i < 3; i++) 
+			Triangle tri_translated;
 			{
-				MultiplyMatrixVector(tri.vertices[i], tri_rotated_z.vertices[i], mat_rot_z);
-			}
+				// Rotate mesh
+				Triangle tri_rotated_z, tri_rotated_zx;
+				for (i32 i = 0; i < 3; i++) 
+				{
+					MultiplyMatrixVector(tri.vertices[i], tri_rotated_z.vertices[i], mat_rot_z);
+				}
 
-			for (i32 i = 0; i < 3; i++) 
-			{
-				MultiplyMatrixVector(tri_rotated_z.vertices[i], tri_rotated_zx.vertices[i], mat_rot_x);
-			}
+				for (i32 i = 0; i < 3; i++) 
+				{
+					MultiplyMatrixVector(tri_rotated_z.vertices[i], tri_rotated_zx.vertices[i], mat_rot_x);
+				}
+				tri_translated = tri_rotated_zx;
 
-			tri_translated = tri_rotated_zx;
-			for (i32 i = 0; i < 3; i++) 
-			{
-				tri_translated.vertices[i].z = tri_rotated_zx.vertices[i].z + 3.0f;
+				// translate mesh
+				for (i32 i = 0; i < 3; i++) 
+				{
+					tri_translated.vertices[i].z = tri_rotated_zx.vertices[i].z + 3.0f;
+				}
 			}
 
 			// calculate surface normal
@@ -161,10 +165,15 @@ public:
 
 			if (glm::dot(glm::normalize(tri_translated.vertices[0] - v_camera_pos), normal) < 0) {
 				// Illumination
-				glm::vec3 light_direction = {0, 0, -1};
-				light_direction = glm::normalize(light_direction);
+				float light_factor;
+				{
+					glm::vec3 light_direction = {0, 0, -1};
+					light_direction = glm::normalize(light_direction);
 
-				float light_factor = glm::dot(light_direction, normal);
+					float light_factor = glm::dot(light_direction, normal);
+				}
+
+				Triangle tri_projected;
 
 				// project triangles from 3d -> 2d
 				MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
