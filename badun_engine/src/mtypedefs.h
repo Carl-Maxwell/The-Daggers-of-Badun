@@ -21,3 +21,13 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
+
+// glm types
+
+#include <glm/glm.hpp>
+
+using glm::vec3;
+using glm::mat4x4;
+using glm::dot;
+using glm::cross;
+using glm::normalize;

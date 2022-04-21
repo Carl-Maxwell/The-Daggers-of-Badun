@@ -1,5 +1,7 @@
 #include "application.h"
 
+#include "mlog.h"
+
 #include "triangle.h"
 
 void Triangle::draw(Application* app) {
@@ -9,7 +11,7 @@ void Triangle::draw(Application* app) {
 	olc::vi2d c((int)vertices[2].x, (int)vertices[2].y);
 
 	// TODO draw lines and triangles manually
-	app->FillTriangle(a, b, c, olc::Pixel(255, 255, 255) * light_factor);
+	app->FillTriangle(a, b, c, color * light_factor);
 	if (app->draw_wireframes) 
-		app->DrawTriangle(a, b, c, olc::Pixel(0, 128, 0));
+		app->DrawTriangle(a, b, c, olc::Pixel(0, 128, 0) * ((1 + light_factor)/2));
 }

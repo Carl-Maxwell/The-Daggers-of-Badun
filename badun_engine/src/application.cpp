@@ -45,8 +45,6 @@ glm::mat4x4 Application::matrix_PointAt(glm::vec3 &pos, glm::vec3 &target, glm::
 
 bool Application::OnUserCreate()
 {
-	mesh_spaceship.tris = {};
-
 	// mesh_spaceship.loadFromObjectFile("resources/teapot.obj");
 	// mesh_spaceship.loadFromObjectFile("resources/video_ship.obj");
 	mesh_spaceship.loadFromObjectFile("resources/axis.obj");
@@ -82,6 +80,9 @@ bool Application::OnUserUpdate(float fElapsedTime)
 {
 	Clear(olc::Pixel(0, 0, 0));
 
+	// Log::white("Beginning frame {0}", frame_count);
+	frame_count++;
+
 	if (GetKey(olc::ESCAPE).bHeld)
 		olc_Terminate();
 	if (GetKey(olc::K1).bPressed)
@@ -104,12 +105,12 @@ bool Application::OnUserUpdate(float fElapsedTime)
 	if (GetKey(olc::LEFT).bHeld)
 		f_yaw -= 2.0f * fElapsedTime;
 
-	Log::green("camera position: {0}, {1}, {2}", v_camera_pos.x, v_camera_pos.y, v_camera_pos.z);
+	// Log::green("camera position: {0}, {1}, {2}", v_camera_pos.x, v_camera_pos.y, v_camera_pos.z);
 
 	f_yaw;
 
 	glm::mat4x4 mat_rot_z{}, mat_rot_x{};
-	// fTheta += fElapsedTime; 
+	// fTheta += fElapsedTime;
 
 	// Rotation Z
 	mat_rot_z[0][0] =  cosf(fTheta);
@@ -140,18 +141,18 @@ bool Application::OnUserUpdate(float fElapsedTime)
 
 	std::vector<Triangle> v_triangles_to_raster;
 
-	for (auto tri : mesh_spaceship.tris) 
+	for (auto tri : mesh_spaceship.tris)
 	{
 		Triangle tri_translated;
 		{
 			// Rotate mesh
 			Triangle tri_rotated_z, tri_rotated_zx;
-			for (i32 i = 0; i < 3; i++) 
+			for (i32 i = 0; i < 3; i++)
 			{
 				MultiplyMatrixVector(tri.vertices[i], tri_rotated_z.vertices[i], mat_rot_z);
 			}
 
-			for (i32 i = 0; i < 3; i++) 
+			for (i32 i = 0; i < 3; i++)
 			{
 				MultiplyMatrixVector(tri_rotated_z.vertices[i], tri_rotated_zx.vertices[i], mat_rot_x);
 			}
@@ -159,7 +160,7 @@ bool Application::OnUserUpdate(float fElapsedTime)
 			tri_translated = tri_rotated_zx;
 
 			// translate mesh
-			for (i32 i = 0; i < 3; i++) 
+			for (i32 i = 0; i < 3; i++)
 			{
 				tri_translated.vertices[i].z += 8.0f;
 			}
@@ -196,30 +197,41 @@ bool Application::OnUserUpdate(float fElapsedTime)
 				tri_translated = t_viewed;
 			}
 			
-			Triangle tri_projected;
+			tri_translated.color = tri.color;
 
-			// project triangles from 3d -> 2d
-			MultiplyMatrixVector(tri_translated.vertices[0], tri_projected.vertices[0], mat_proj);
-			MultiplyMatrixVector(tri_translated.vertices[1], tri_projected.vertices[1], mat_proj);
-			MultiplyMatrixVector(tri_translated.vertices[2], tri_projected.vertices[2], mat_proj);
+			// Clip
+			i32 n_clipped_tris = 0;
+			Triangle clipped[2] = {};
 
-			// scale into view
-			for (i32 i = 0; i < 3; i++) 
+			n_clipped_tris = t_clipAgainstPlane({0.0f, 0.0f, 0.1f}, {0.0f, 0.0f, 1.0f}, tri_translated, clipped[0], clipped[1]);
+			for (i32 n = 0; n < n_clipped_tris; n++)
 			{
-				tri_projected.vertices[i] += 1.0f;
-				tri_projected.vertices[i] *= 0.5f * glm::vec3((float)ScreenWidth(), (float)ScreenHeight(), 2.0f);
+				Triangle tri_projected;
+
+				// project triangles from 3d -> 2d
+				MultiplyMatrixVector(clipped[n].vertices[0], tri_projected.vertices[0], mat_proj);
+				MultiplyMatrixVector(clipped[n].vertices[1], tri_projected.vertices[1], mat_proj);
+				MultiplyMatrixVector(clipped[n].vertices[2], tri_projected.vertices[2], mat_proj);
+
+				// scale into view
+				for (i32 i = 0; i < 3; i++)
+				{
+					tri_projected.vertices[i] += 1.0f;
+					tri_projected.vertices[i] *= 0.5f * glm::vec3((float)ScreenWidth(), (float)ScreenHeight(), 2.0f);
+				}
+
+				tri_projected.light_factor = light_factor;
+				tri_projected.color = clipped[n].color;
+
+				v_triangles_to_raster.push_back(tri_projected);
 			}
-
-			tri_projected.light_factor = light_factor;
-
-			v_triangles_to_raster.push_back(tri_projected);
 		}
 	}
 
 	// Sort triangles from back to front
 	std::sort(
-		v_triangles_to_raster.begin(), 
-		v_triangles_to_raster.end(), 
+		v_triangles_to_raster.begin(),
+		v_triangles_to_raster.end(),
 		[](Triangle &a, Triangle &b)
 		{
 			float a_z_sum = a.vertices[0].z + a.vertices[1].z + a.vertices[2].z;
@@ -232,6 +244,8 @@ bool Application::OnUserUpdate(float fElapsedTime)
 	{
 		tri.draw(this);
 	}
+
+	// Log::white("Ending frame {0}", frame_count);
 
 	return true;
 }
@@ -265,4 +279,126 @@ glm::mat4x4 Application::matrix_QuickInverse(glm::mat4x4 &m)
 	matrix[3][3] = 1.0f;
 
 	return matrix;
+}
+
+// returns the point of intersection with the plane ... I think
+glm::vec3 Application::v_IntersectPlane(
+	glm::vec3 &plane_pos,
+	glm::vec3 &plane_normal,
+	glm::vec3 &line_start_pos,
+	glm::vec3 &line_end_pos
+) {
+	plane_normal = glm::normalize(plane_normal);
+	f32 plane_dot = glm::dot(plane_normal, plane_pos);
+	f32 ad = glm::dot(line_start_pos, plane_normal);
+	f32 bd = glm::dot(line_end_pos, plane_normal);
+	f32 t  = (plane_dot - ad) / (bd - ad);
+
+	glm::vec3 line_diff = line_end_pos - line_start_pos;
+	glm::vec3 lineToIntersect = line_diff * t;
+
+	return line_start_pos + lineToIntersect;
+}
+
+i32 Application::t_clipAgainstPlane(
+	vec3 plane_pos,
+	vec3 plane_normal,
+	Triangle &in_tri,
+	Triangle &out_tri1,
+	Triangle &out_tri2
+) {
+	plane_normal = normalize(plane_normal);
+
+	// Return shortest distance from point to plane
+	auto dist = [plane_normal, plane_pos](vec3 &p)
+	{
+		vec3 n = normalize(p);
+		return (
+			  plane_normal.x * p.x
+			+ plane_normal.y * p.y
+			+ plane_normal.z * p.z
+			- dot(plane_normal, plane_pos));
+	};
+
+	// classify points as either good side or bad side of plane
+	// if distance sign is positive, point lies on good side of plane
+	vec3* good_points[3]; i32 n_good_point_count = 0;
+	vec3* bad_points[3] ; i32 n_bad_point_count  = 0;
+
+	// get distance of each point in triangle to plane
+	f32 d0 = dist(in_tri.vertices[0]);
+	f32 d1 = dist(in_tri.vertices[1]);
+	f32 d2 = dist(in_tri.vertices[2]);
+
+	if (d0 >= 0) {
+		good_points[n_good_point_count++] = &in_tri.vertices[0];
+	} else {
+		bad_points[n_bad_point_count++  ] = &in_tri.vertices[0];
+	}
+	if (d1 >= 0) {
+		good_points[n_good_point_count++] = &in_tri.vertices[1];
+	} else {
+		bad_points[n_bad_point_count++  ] = &in_tri.vertices[1];
+	}
+	if (d2 >= 0) {
+		good_points[n_good_point_count++] = &in_tri.vertices[2];
+	} else {
+		bad_points[n_bad_point_count++  ] = &in_tri.vertices[2];
+	}
+
+	// now classify classify triangle points,
+	//   and break the input triangle into smaller output triangles if required
+
+	if (n_good_point_count == 0)
+	{
+		// triangle is totally clipped. The returned triangles are not valid
+		return 0;
+	}
+	else if (n_good_point_count == 3)
+	{
+		// triangle is good, not clipped by plane at all
+		out_tri1 = in_tri;
+
+		return 1; // pass the input triangle through unchanged
+	}
+	else if (n_good_point_count == 1 && n_bad_point_count == 2)
+	{
+		// only one good point,
+		//   make a new triangle from it and the two intersecting points along the plane
+
+		out_tri1.light_factor = in_tri.light_factor;
+		out_tri1.color = in_tri.color;
+
+		// take the good point
+		out_tri1.vertices[0] = *good_points[0];
+
+		// get the points of intersection with the plane, add them to the new tri
+		out_tri1.vertices[1] = v_IntersectPlane(plane_pos, plane_normal, *good_points[0], *bad_points[0]);
+		out_tri1.vertices[2] = v_IntersectPlane(plane_pos, plane_normal, *good_points[0], *bad_points[1]);
+
+		return 1;
+	} else if (n_good_point_count == 2 && n_bad_point_count == 1)
+	{
+		// Need to clip and make a quad from 2 good points & 2 intersections with the plane
+
+		out_tri1.light_factor = in_tri.light_factor;
+		out_tri2.light_factor = in_tri.light_factor;
+
+		out_tri1.color = in_tri.color;
+		out_tri2.color = in_tri.color;
+
+		vec3 intersect0 = v_IntersectPlane(plane_pos, plane_normal, *good_points[0], *bad_points[0]);;
+		vec3 intersect1 = v_IntersectPlane(plane_pos, plane_normal, *good_points[1], *bad_points[0]);;
+
+		out_tri1.vertices[0] = *good_points[0];
+		out_tri1.vertices[1] = *good_points[1];
+		out_tri1.vertices[2] = intersect0;
+
+		out_tri2.vertices[0] = *good_points[1];
+		out_tri2.vertices[1] = intersect0;
+		out_tri2.vertices[2] = intersect1;
+
+		return 2;
+	}
+
 }
